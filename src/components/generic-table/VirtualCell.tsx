@@ -4,33 +4,25 @@ export const VirtualCell = React.memo(
   ({
     isEditing,
     value,
-    onChange,
     isDirty,
+    onChange,
   }: {
     isEditing: boolean
     value: unknown
     isDirty?: boolean
     onChange?: (val: unknown) => void
   }) => {
-    const displayValue =
-      value instanceof Date ? value.toLocaleString() : String(value ?? '')
-
-    const className = [
-      'px-2 py-1',
-      isDirty ? 'bg-yellow-100' : '',  // 変更されたセルに色をつける
-    ]
-      .filter(Boolean)
-      .join(' ')
+    const display = value instanceof Date ? value.toLocaleString() : String(value ?? '')
+    const dirtyClass = isDirty ? 'bg-yellow-100' : ''
 
     return isEditing ? (
       <input
-        className={`border rounded w-full ${className}`}
-        value={displayValue}
+        className={`border rounded w-full px-1 ${dirtyClass}`}
+        value={display}
         onChange={(e) => onChange?.(e.target.value)}
       />
     ) : (
-      <span className={className}>{displayValue}</span>
+      <span className={`block px-1 ${dirtyClass}`}>{display}</span>
     )
   }
 )
-

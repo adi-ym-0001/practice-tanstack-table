@@ -1,50 +1,30 @@
-import type { Person } from '@/data/types'
 import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   useReactTable,
-  type ColumnDef
+  type ColumnDef,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import React from 'react'
+import React, { useRef } from 'react'
 import { Filter } from './Filter'
 import { VirtualCell } from './VirtualCell'
 
-type TableProps = {
-  data: Person[]
-  onSave: (patched: Record<string, Record<string, unknown>>) => void
+type Props<TData extends { id: string }> = {
+  data: TData[]
+  columns: ColumnDef<TData>[]
   isEditing: boolean
-  dirtyCells: Record<string, Record<string, unknown>>
-  setDirtyCells: React.Dispatch<
-    React.SetStateAction<Record<string, Record<string, unknown>>>
-  >
+  dirtyCells: Record<string, Partial<TData>>
+  setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<TData>>>>
 }
 
-export function VirtualizedEditableTable({
+export function VirtualizedEditableTable<TData extends { id: string }>({
   data,
-  onSave,
+  columns,
   isEditing,
   dirtyCells,
   setDirtyCells,
-}: TableProps) {
-  const columns = React.useMemo<ColumnDef<Person>[]>(() => [
-    { accessorKey: 'id', header: 'ID', size: 60 },
-    { accessorKey: 'firstName', header: 'First Name', enableColumnFilter: true },
-    { accessorKey: 'lastName', header: 'Last Name', enableColumnFilter: true },
-    { accessorKey: 'age', header: 'Age', enableColumnFilter: true },
-    { accessorKey: 'visits', header: 'Visits', enableColumnFilter: true },
-    { accessorKey: 'status', header: 'Status', enableColumnFilter: true },
-    { accessorKey: 'progress', header: 'Progress', enableColumnFilter: true },
-    {
-      accessorKey: 'createdAt',
-      header: 'Created At',
-      enableColumnFilter: true,
-      cell: (info) =>
-        (info.getValue<Date>() || new Date()).toLocaleDateString(),
-    },
-  ], [])
-
+}: Props<TData>) {
   const table = useReactTable({
     data,
     columns,
@@ -52,9 +32,8 @@ export function VirtualizedEditableTable({
     getFilteredRowModel: getFilteredRowModel(),
   })
 
-  const parentRef = React.useRef<HTMLDivElement>(null)
   const rows = table.getRowModel().rows
-
+  const parentRef = useRef<HTMLDivElement>(null)
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
@@ -62,18 +41,39 @@ export function VirtualizedEditableTable({
     overscan: 10,
   })
 
+  const virtualItems = virtualizer.getVirtualItems()
+  const paddingTop = virtualItems[0]?.start ?? 0
+  const paddingBottom =
+    virtualizer.getTotalSize() -
+    (virtualItems[virtualItems.length - 1]?.end ?? 0)
+
+  const allColumns = table.getAllLeafColumns()
+
   return (
-    <div ref={parentRef} className="h-[600px] overflow-auto border">
-      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
-        <table className="absolute w-full top-0 left-0 border-collapse">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id}>
+    <div className="border rounded overflow-hidden text-sm text-gray-900">
+      <div
+        ref={parentRef}
+        className="h-[360px] overflow-y-auto overflow-x-auto"
+      >
+        <table className="min-w-full table-fixed border-separate border-spacing-0">
+          <colgroup>
+            {allColumns.map((col) => (
+              <col key={col.id} style={{ width: col.getSize() }} />
+            ))}
+          </colgroup>
+          <thead className="sticky top-0 z-10 bg-white">
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="border-b px-2 py-1 text-left font-medium text-gray-700 align-bottom bg-white"
+                  >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     {header.column.getCanFilter() && (
-                      <Filter column={header.column} table={table} />
+                      <div className="mt-1">
+                        <Filter column={header.column} table={table} />
+                      </div>
                     )}
                   </th>
                 ))}
@@ -81,33 +81,39 @@ export function VirtualizedEditableTable({
             ))}
           </thead>
           <tbody>
-            {virtualizer.getVirtualItems().map((vr) => {
-              const row = rows[vr.index]
+            {paddingTop > 0 && (
+              <tr style={{ height: `${paddingTop}px` }}>
+                <td colSpan={allColumns.length} />
+              </tr>
+            )}
+            {virtualItems.map((vi) => {
+              const row = rows[vi.index]
               return (
                 <tr
                   key={row.id}
-                  style={{
-                    position: 'absolute',
-                    transform: `translateY(${vr.start}px)`,
-                    height: `${vr.size}px`,
-                  }}
+                  className="bg-white even:bg-gray-50"
+                  style={{ height: `${vi.size}px` }}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const rowId = row.original.id
                     const colId = cell.column.id
                     const dirty = dirtyCells[rowId]?.[colId]
-                    const baseValue = dirty ?? row.getValue(colId)
-
                     return (
-                      <td key={cell.id} className="border px-2">
+                      <td
+                        key={cell.id}
+                        className="border px-2 py-1 align-top"
+                      >
                         <VirtualCell
                           isEditing={isEditing}
-                          value={baseValue}
+                          value={dirty ?? row.getValue(colId)}
                           isDirty={dirty !== undefined}
                           onChange={(val) =>
                             setDirtyCells((prev) => ({
                               ...prev,
-                              [rowId]: { ...prev[rowId], [colId]: val },
+                              [rowId]: {
+                                ...prev[rowId],
+                                [colId]: val,
+                              },
                             }))
                           }
                         />
@@ -117,6 +123,11 @@ export function VirtualizedEditableTable({
                 </tr>
               )
             })}
+            {paddingBottom > 0 && (
+              <tr style={{ height: `${paddingBottom}px` }}>
+                <td colSpan={allColumns.length} />
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

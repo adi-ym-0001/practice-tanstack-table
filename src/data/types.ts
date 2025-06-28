@@ -8,3 +8,12 @@ export type Person = {
   progress: number
   createdAt: Date
 }
+
+export type Product = {
+  id: string
+  name: string
+  price: number
+  stock: number
+  category: string
+  updatedAt: Date
+}

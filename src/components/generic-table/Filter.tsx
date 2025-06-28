@@ -13,8 +13,9 @@ export function Filter({
   return typeof firstValue === 'number' ? (
     <div className="flex gap-1">
       <input
-        type="number"
+        className="border px-1 w-20"
         placeholder="Min"
+        type="number"
         value={(columnFilterValue as [number, number])?.[0] ?? ''}
         onChange={(e) =>
           column.setFilterValue((old: [number, number]) => [
@@ -22,11 +23,11 @@ export function Filter({
             old?.[1],
           ])
         }
-        className="w-20 border px-1 rounded"
       />
       <input
-        type="number"
+        className="border px-1 w-20"
         placeholder="Max"
+        type="number"
         value={(columnFilterValue as [number, number])?.[1] ?? ''}
         onChange={(e) =>
           column.setFilterValue((old: [number, number]) => [
@@ -34,16 +35,14 @@ export function Filter({
             e.target.value,
           ])
         }
-        className="w-20 border px-1 rounded"
       />
     </div>
   ) : (
     <input
-      type="text"
+      className="border px-1 w-32"
       placeholder="Search..."
       value={(columnFilterValue ?? '') as string}
       onChange={(e) => column.setFilterValue(e.target.value)}
-      className="w-36 border px-1 rounded"
     />
   )
 }
