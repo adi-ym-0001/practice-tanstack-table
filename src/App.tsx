@@ -15,6 +15,9 @@ export default function App() {
   const [peopleDirty, setPeopleDirty] = useState<Record<string, Partial<Person>>>({})
   const [productDirty, setProductDirty] = useState<Record<string, Partial<Product>>>({})
 
+  const [peopleSelection, setPeopleSelection] = useState<Record<string, boolean>>({})
+  const [productSelection, setProductSelection] = useState<Record<string, boolean>>({})
+
   const handleSavePeople = () => {
     setPeople((prev) =>
       prev.map((row) =>
@@ -65,6 +68,7 @@ export default function App() {
 
   return (
     <div className="p-6 space-y-8">
+      {/* ユーザー編集セクション */}
       <section>
         <div className="flex items-center gap-4 mb-2">
           <button
@@ -89,9 +93,12 @@ export default function App() {
           isEditing={isEditingPeople}
           dirtyCells={peopleDirty}
           setDirtyCells={setPeopleDirty}
+          rowSelection={peopleSelection}
+          setRowSelection={setPeopleSelection}
         />
       </section>
 
+      {/* 商品編集セクション */}
       <section>
         <div className="flex items-center gap-4 mb-2">
           <button
@@ -116,6 +123,8 @@ export default function App() {
           isEditing={isEditingProducts}
           dirtyCells={productDirty}
           setDirtyCells={setProductDirty}
+          rowSelection={productSelection}
+          setRowSelection={setProductSelection}
         />
       </section>
     </div>

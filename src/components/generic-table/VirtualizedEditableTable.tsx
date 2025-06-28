@@ -16,6 +16,29 @@ type Props<TData extends { id: string }> = {
   isEditing: boolean
   dirtyCells: Record<string, Partial<TData>>
   setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<TData>>>>
+  rowSelection: Record<string, boolean>
+  setRowSelection: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+}
+
+function IndeterminateCheckbox({
+  indeterminate,
+  className = '',
+  ...rest
+}: { indeterminate?: boolean } & React.HTMLProps<HTMLInputElement>) {
+  const ref = React.useRef<HTMLInputElement>(null!)
+  React.useEffect(() => {
+    if (typeof indeterminate === 'boolean') {
+      ref.current.indeterminate = !rest.checked && indeterminate
+    }
+  }, [ref, indeterminate])
+  return (
+    <input
+      type="checkbox"
+      ref={ref}
+      className={className + ' cursor-pointer'}
+      {...rest}
+    />
+  )
 }
 
 export function VirtualizedEditableTable<TData extends { id: string }>({
@@ -24,12 +47,17 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
   isEditing,
   dirtyCells,
   setDirtyCells,
+  rowSelection,
+  setRowSelection,
 }: Props<TData>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    state: { rowSelection },
+    onRowSelectionChange: setRowSelection,
+    enableRowSelection: true,
   })
 
   const rows = table.getRowModel().rows
@@ -57,6 +85,8 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
       >
         <table className="min-w-full table-fixed border-separate border-spacing-0">
           <colgroup>
+            {/* 選択用列幅 */}
+            <col style={{ width: 36 }} />
             {allColumns.map((col) => (
               <col key={col.id} style={{ width: col.getSize() }} />
             ))}
@@ -64,6 +94,13 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
           <thead className="sticky top-0 z-10 bg-white">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
+                <th className="border-b px-2 py-1 bg-white">
+                  <IndeterminateCheckbox
+                    checked={table.getIsAllRowsSelected()}
+                    indeterminate={table.getIsSomeRowsSelected()}
+                    onChange={table.getToggleAllRowsSelectedHandler()}
+                  />
+                </th>
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
@@ -83,7 +120,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
           <tbody>
             {paddingTop > 0 && (
               <tr style={{ height: `${paddingTop}px` }}>
-                <td colSpan={allColumns.length} />
+                <td colSpan={allColumns.length + 1} />
               </tr>
             )}
             {virtualItems.map((vi) => {
@@ -91,9 +128,18 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
               return (
                 <tr
                   key={row.id}
-                  className="bg-white even:bg-gray-50"
+                  className={`${
+                    row.getIsSelected() ? 'bg-blue-50' : 'bg-white'
+                  } even:bg-gray-50`}
                   style={{ height: `${vi.size}px` }}
                 >
+                  <td className="border px-2 py-1 align-top">
+                    <IndeterminateCheckbox
+                      checked={row.getIsSelected()}
+                      indeterminate={row.getIsSomeSelected()}
+                      onChange={row.getToggleSelectedHandler()}
+                    />
+                  </td>
                   {row.getVisibleCells().map((cell) => {
                     const rowId = row.original.id
                     const colId = cell.column.id
@@ -125,7 +171,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
             })}
             {paddingBottom > 0 && (
               <tr style={{ height: `${paddingBottom}px` }}>
-                <td colSpan={allColumns.length} />
+                <td colSpan={allColumns.length + 1} />
               </tr>
             )}
           </tbody>
