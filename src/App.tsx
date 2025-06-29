@@ -28,7 +28,7 @@ export default function App() {
           title="👤 ユーザーテーブル"
           data={people}
           setData={setPeople}
-          columns={personColumns}
+          columns={getPersonColumns(showPeopleCheckbox)}
           isEditing={isEditingPeople}
           setIsEditing={setIsEditingPeople}
           dirtyCells={peopleDirty}
@@ -45,7 +45,7 @@ export default function App() {
           title="🛒 商品テーブル"
           data={products}
           setData={setProducts}
-          columns={productColumns}
+          columns={getProductColumns(showProductsCheckbox)}
           isEditing={isEditingProducts}
           setIsEditing={setIsEditingProducts}
           dirtyCells={productDirty}
@@ -60,33 +60,59 @@ export default function App() {
   )
 }
 
-const personColumns: ColumnDef<Person>[] = [
-  { accessorKey: 'id', header: 'ID' },
-  { accessorKey: 'firstName', header: 'First Name' },
-  { accessorKey: 'lastName', header: 'Last Name' },
-  { accessorKey: 'age', header: 'Age' },
-  { accessorKey: 'visits', header: 'Visits' },
-  { accessorKey: 'status', header: 'Status' },
-  { accessorKey: 'progress', header: 'Progress' },
-  {
-    accessorKey: 'createdAt',
-    header: 'Created',
-    cell: (info) => (info.getValue<Date>() ?? new Date()).toLocaleDateString(),
-  },
-]
+function getPersonColumns(show: boolean): ColumnDef<Person>[] {
+  const base: ColumnDef<Person>[] = [
+    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'firstName', header: 'First Name' },
+    { accessorKey: 'lastName', header: 'Last Name' },
+    { accessorKey: 'age', header: 'Age' },
+    { accessorKey: 'visits', header: 'Visits' },
+    { accessorKey: 'status', header: 'Status' },
+    { accessorKey: 'progress', header: 'Progress' },
+    {
+      accessorKey: 'createdAt',
+      header: 'Created',
+      cell: (info) =>
+        (info.getValue<Date>() ?? new Date()).toLocaleDateString(),
+    },
+  ]
 
-const productColumns: ColumnDef<Product>[] = [
-  { accessorKey: 'id', header: 'ID' },
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'price', header: 'Price' },
-  { accessorKey: 'stock', header: 'Stock' },
-  { accessorKey: 'category', header: 'Category' },
-  {
-    accessorKey: 'updatedAt',
-    header: 'Updated',
-    cell: (info) => (info.getValue<Date>() ?? new Date()).toLocaleString(),
-  },
-]
+  if (!show) return base
+
+  const hiddenKeys = ['id', 'progress', 'createdAt']
+
+  return base.filter((col) => {
+    const key = 'accessorKey' in col ? col.accessorKey : undefined
+    return typeof key !== 'string' || !hiddenKeys.includes(key)
+  })
+}
+
+
+function getProductColumns(show: boolean): ColumnDef<Product>[] {
+  const base: ColumnDef<Product>[] = [
+    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'price', header: 'Price' },
+    { accessorKey: 'stock', header: 'Stock' },
+    { accessorKey: 'category', header: 'Category' },
+    {
+      accessorKey: 'updatedAt',
+      header: 'Updated',
+      cell: (info) =>
+        (info.getValue<Date>() ?? new Date()).toLocaleString(),
+    },
+  ]
+
+  if (!show) return base
+
+  const hiddenKeys = ['id', 'updatedAt']
+
+  return base.filter((col) => {
+    const key = 'accessorKey' in col ? col.accessorKey : undefined
+    return typeof key !== 'string' || !hiddenKeys.includes(key)
+  })
+}
+
 
 function SectionContainer<T extends { id: string }>({
   title,

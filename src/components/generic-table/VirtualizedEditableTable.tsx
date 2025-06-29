@@ -19,7 +19,7 @@ type Props<TData extends { id: string }> = {
   setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<TData>>>>
   rowSelection: Record<string, boolean>
   setRowSelection: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
-  onSelectedRowCountChange?: (count: number) => void // ✅ 選択件数通知
+  onSelectedRowCountChange?: (count: number) => void
 }
 
 function IndeterminateCheckbox({
@@ -88,7 +88,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
   return (
     <div className="border rounded overflow-hidden text-sm text-gray-900">
       <div ref={parentRef} className="h-[360px] overflow-y-auto overflow-x-auto">
-        <table className="min-w-full table-fixed border-separate border-spacing-0">
+        <table className="w-full table-fixed border-separate border-spacing-0">
           <colgroup>
             {showCheckbox && <col style={{ width: 36 }} />}
             {allColumns.map((col) => (
@@ -135,12 +135,25 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
 
             {virtualItems.map((vi) => {
               const row = rows[vi.index]
+              const isSelected = row.getIsSelected()
+              const isIn30s =
+                'age' in row.original &&
+                typeof row.original.age === 'number' &&
+                row.original.age >= 30 &&
+                row.original.age < 40
+
+              const bgColorClass = isSelected
+                ? 'bg-blue-50'
+                : isIn30s
+                ? 'bg-yellow-50'
+                : vi.index % 2 === 0
+                ? 'bg-white'
+                : 'bg-gray-50'
+
               return (
                 <tr
                   key={row.id}
-                  className={`${
-                    row.getIsSelected() ? 'bg-blue-50' : 'bg-white'
-                  } even:bg-gray-50`}
+                  className={bgColorClass}
                   style={{ height: `${vi.size}px` }}
                 >
                   {showCheckbox && (
@@ -157,7 +170,10 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
                     const colId = cell.column.id
                     const dirty = dirtyCells[rowId]?.[colId]
                     return (
-                      <td key={cell.id} className="border px-2 py-1 align-top">
+                      <td
+                        key={cell.id}
+                        className="border px-2 py-1 align-top"
+                      >
                         <VirtualCell
                           isEditing={isEditing}
                           value={dirty ?? row.getValue(colId)}
