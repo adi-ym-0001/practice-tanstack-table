@@ -171,8 +171,8 @@ function SectionContainer<T extends { id: string }>({
       </div>
 
       <h2 className="text-lg font-semibold mb-2">{title}</h2>
-      <div className="flex gap-6 items-start">
-        <div className="flex-1">
+      <div className="flex items-start gap-6 w-full">
+        <div className={showCheckbox ? 'w-1/2' : 'w-full'}>
           <VirtualizedEditableTable
             data={data}
             columns={columns}
@@ -187,7 +187,7 @@ function SectionContainer<T extends { id: string }>({
         </div>
 
         {showCheckbox && (
-          <div className="w-[300px] border rounded p-3 bg-gray-50 shadow-sm">
+          <div className="w-1/2 border rounded p-3 bg-gray-50 shadow-sm">
             <h3 className="text-sm font-semibold mb-2 text-gray-700">📦 パッケージ</h3>
             {committedItems.length === 0 ? (
               <p className="text-gray-500 text-sm">まだ割当されたレコードはありません</p>
