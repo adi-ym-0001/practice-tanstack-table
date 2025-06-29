@@ -2,7 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { VirtualizedEditableTable } from './generic-table/VirtualizedEditableTable'
 
-// 各データセクション（ユーザーや商品など）を構成する汎用コンポーネント
+// 編集・チェック・パッケージングなどの操作を含むテーブルセクションの汎用コンテナ
 export function SectionContainer<T extends { id: string }>({
   title,
   data,

@@ -1,6 +1,6 @@
 import React from 'react'
 
-// VirtualCell コンポーネント：表示セル or 編集セルの見た目を切り替える汎用セル
+// セル描画ロジック（表示 or 編集 input を切り替え）
 export const VirtualCell = React.memo(
   ({
     isEditing,

@@ -1,6 +1,6 @@
 import type { Column, Table } from '@tanstack/react-table'
 
-// 汎用的なフィルターコンポーネント：列が数値かどうかでフィルター入力の種類を切り替える
+// Filter.tsx	数値・文字列による列フィルター UI を提供
 export function Filter({
   column,
   table,

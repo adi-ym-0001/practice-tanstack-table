@@ -1,7 +1,7 @@
 import { type ColumnDef } from '@tanstack/react-table'
 import type { Person } from '../../data/types'
 
-// パッケージ生成モードの状態に応じて Person テーブルの列定義を返す関数
+// ユーザー用のカラム定義。表示列を showCheckbox に応じて切り替え
 export const getPersonColumns = (showCheckbox: boolean): ColumnDef<Person>[] => {
   // ベースとなるカラム定義（すべての列を表示）
   const base: ColumnDef<Person>[] = [
