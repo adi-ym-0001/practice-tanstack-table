@@ -1,5 +1,5 @@
-import type { ColumnDef } from '@tanstack/react-table'
-import { useState } from 'react'
+import { type ColumnDef } from '@tanstack/react-table'
+import React, { useState } from 'react'
 import { VirtualizedEditableTable } from './components/generic-table/VirtualizedEditableTable'
 import { makePeople } from './data/makePeople'
 import { makeProducts } from './data/makeProducts'
@@ -21,127 +21,179 @@ export default function App() {
   const [peopleSelection, setPeopleSelection] = useState<Record<string, boolean>>({})
   const [productSelection, setProductSelection] = useState<Record<string, boolean>>({})
 
-  const handleSavePeople = () => {
-    setPeople((prev) =>
-      prev.map((row) =>
-        peopleDirty[row.id] ? { ...row, ...peopleDirty[row.id] } : row
-      )
-    )
-    setPeopleDirty({})
-    setIsEditingPeople(false)
-  }
-
-  const handleSaveProducts = () => {
-    setProducts((prev) =>
-      prev.map((row) =>
-        productDirty[row.id] ? { ...row, ...productDirty[row.id] } : row
-      )
-    )
-    setProductDirty({})
-    setIsEditingProducts(false)
-  }
-
-  const personColumns: ColumnDef<Person>[] = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'firstName', header: 'First Name' },
-    { accessorKey: 'lastName', header: 'Last Name' },
-    { accessorKey: 'age', header: 'Age' },
-    { accessorKey: 'visits', header: 'Visits' },
-    { accessorKey: 'status', header: 'Status' },
-    { accessorKey: 'progress', header: 'Progress' },
-    {
-      accessorKey: 'createdAt',
-      header: 'Created',
-      cell: (info) => (info.getValue<Date>() ?? new Date()).toLocaleDateString(),
-    },
-  ]
-
-  const productColumns: ColumnDef<Product>[] = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'name', header: 'Name' },
-    { accessorKey: 'price', header: 'Price' },
-    { accessorKey: 'stock', header: 'Stock' },
-    { accessorKey: 'category', header: 'Category' },
-    {
-      accessorKey: 'updatedAt',
-      header: 'Updated',
-      cell: (info) => (info.getValue<Date>() ?? new Date()).toLocaleString(),
-    },
-  ]
-
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-12">
       <section>
-        <div className="flex items-center gap-4 mb-2">
-          <button
-            onClick={() => setShowPeopleCheckbox((prev) => !prev)}
-            className="border px-4 py-1 rounded bg-purple-100"
-          >
-            {showPeopleCheckbox ? 'チェック非表示' : 'パッケージ生成'}
-          </button>
-          <button
-            onClick={() => setIsEditingPeople((prev) => !prev)}
-            className="border px-4 py-1 rounded"
-          >
-            {isEditingPeople ? 'キャンセル' : 'ユーザー編集'}
-          </button>
-          {isEditingPeople && (
-            <button
-              onClick={handleSavePeople}
-              className="border px-4 py-1 rounded bg-blue-100"
-            >
-              保存（ユーザー）
-            </button>
-          )}
-        </div>
-        <h2 className="text-lg font-semibold mb-2">👤 ユーザーテーブル</h2>
-        <VirtualizedEditableTable
+        <SectionContainer
+          title="👤 ユーザーテーブル"
           data={people}
+          setData={setPeople}
           columns={personColumns}
           isEditing={isEditingPeople}
+          setIsEditing={setIsEditingPeople}
           dirtyCells={peopleDirty}
           setDirtyCells={setPeopleDirty}
           rowSelection={peopleSelection}
           setRowSelection={setPeopleSelection}
           showCheckbox={showPeopleCheckbox}
+          setShowCheckbox={setShowPeopleCheckbox}
         />
       </section>
 
       <section>
-        <div className="flex items-center gap-4 mb-2">
-          <button
-            onClick={() => setShowProductsCheckbox((prev) => !prev)}
-            className="border px-4 py-1 rounded bg-purple-100"
-          >
-            {showProductsCheckbox ? 'チェック非表示' : 'パッケージ生成'}
-          </button>
-          <button
-            onClick={() => setIsEditingProducts((prev) => !prev)}
-            className="border px-4 py-1 rounded"
-          >
-            {isEditingProducts ? 'キャンセル' : '商品編集'}
-          </button>
-          {isEditingProducts && (
-            <button
-              onClick={handleSaveProducts}
-              className="border px-4 py-1 rounded bg-green-100"
-            >
-              保存（商品）
-            </button>
-          )}
-        </div>
-        <h2 className="text-lg font-semibold mb-2">📦 商品テーブル</h2>
-        <VirtualizedEditableTable
+        <SectionContainer
+          title="🛒 商品テーブル"
           data={products}
+          setData={setProducts}
           columns={productColumns}
           isEditing={isEditingProducts}
+          setIsEditing={setIsEditingProducts}
           dirtyCells={productDirty}
           setDirtyCells={setProductDirty}
           rowSelection={productSelection}
           setRowSelection={setProductSelection}
           showCheckbox={showProductsCheckbox}
+          setShowCheckbox={setShowProductsCheckbox}
         />
       </section>
     </div>
+  )
+}
+
+const personColumns: ColumnDef<Person>[] = [
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'firstName', header: 'First Name' },
+  { accessorKey: 'lastName', header: 'Last Name' },
+  { accessorKey: 'age', header: 'Age' },
+  { accessorKey: 'visits', header: 'Visits' },
+  { accessorKey: 'status', header: 'Status' },
+  { accessorKey: 'progress', header: 'Progress' },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created',
+    cell: (info) => (info.getValue<Date>() ?? new Date()).toLocaleDateString(),
+  },
+]
+
+const productColumns: ColumnDef<Product>[] = [
+  { accessorKey: 'id', header: 'ID' },
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'price', header: 'Price' },
+  { accessorKey: 'stock', header: 'Stock' },
+  { accessorKey: 'category', header: 'Category' },
+  {
+    accessorKey: 'updatedAt',
+    header: 'Updated',
+    cell: (info) => (info.getValue<Date>() ?? new Date()).toLocaleString(),
+  },
+]
+
+function SectionContainer<T extends { id: string }>({
+  title,
+  data,
+  setData,
+  columns,
+  isEditing,
+  setIsEditing,
+  dirtyCells,
+  setDirtyCells,
+  rowSelection,
+  setRowSelection,
+  showCheckbox,
+  setShowCheckbox,
+}: {
+  title: string
+  data: T[]
+  setData: React.Dispatch<React.SetStateAction<T[]>>
+  columns: ColumnDef<T>[]
+  isEditing: boolean
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
+  dirtyCells: Record<string, Partial<T>>
+  setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<T>>>>
+  rowSelection: Record<string, boolean>
+  setRowSelection: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  showCheckbox: boolean
+  setShowCheckbox: React.Dispatch<React.SetStateAction<boolean>>
+}) {
+  const [selectedCount, setSelectedCount] = useState(0)
+  const selectedItems = data.filter((d) => rowSelection[d.id])
+
+  return (
+    <>
+      <div className="flex items-center gap-4 mb-2">
+        <button
+          onClick={() => setShowCheckbox((prev) => !prev)}
+          className="border px-4 py-1 rounded bg-purple-100"
+        >
+          {showCheckbox ? 'チェック非表示' : 'パッケージ生成'}
+        </button>
+
+        {showCheckbox && (
+          <button
+            disabled={selectedCount === 0}
+            onClick={() => console.log('割当', selectedItems)}
+            className="border px-4 py-1 rounded bg-blue-600 text-white text-sm disabled:opacity-40"
+          >
+            割当
+          </button>
+        )}
+
+        <button
+          onClick={() => setIsEditing((prev) => !prev)}
+          className="border px-4 py-1 rounded"
+        >
+          {isEditing ? 'キャンセル' : '編集'}
+        </button>
+
+        {isEditing && (
+          <button
+            onClick={() => {
+              setData((prev) =>
+                prev.map((row) =>
+                  dirtyCells[row.id] ? { ...row, ...dirtyCells[row.id] } : row
+                )
+              )
+              setDirtyCells({})
+              setIsEditing(false)
+            }}
+            className="border px-4 py-1 rounded bg-blue-100"
+          >
+            保存
+          </button>
+        )}
+      </div>
+
+      <h2 className="text-lg font-semibold mb-2">{title}</h2>
+      <div className="flex gap-6 items-start">
+        <div className="flex-1">
+          <VirtualizedEditableTable
+            data={data}
+            columns={columns}
+            isEditing={isEditing}
+            dirtyCells={dirtyCells}
+            setDirtyCells={setDirtyCells}
+            rowSelection={rowSelection}
+            setRowSelection={setRowSelection}
+            showCheckbox={showCheckbox}
+            onSelectedRowCountChange={setSelectedCount}
+          />
+        </div>
+
+        {showCheckbox && (
+          <div className="w-[300px] border rounded p-3 bg-gray-50 shadow-sm">
+            <h3 className="text-sm font-semibold mb-2 text-gray-700">📦 パッケージ</h3>
+            {selectedItems.length === 0 ? (
+              <p className="text-gray-500 text-sm">選択中のレコードがありません</p>
+            ) : (
+              <ul className="text-sm space-y-1 list-disc list-inside text-gray-800">
+                {selectedItems.map((item) => (
+                  <li key={item.id}>{JSON.stringify(item)}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   )
 }

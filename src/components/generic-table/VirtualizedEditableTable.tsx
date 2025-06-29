@@ -19,6 +19,7 @@ type Props<TData extends { id: string }> = {
   setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<TData>>>>
   rowSelection: Record<string, boolean>
   setRowSelection: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  onSelectedRowCountChange?: (count: number) => void // ✅ 選択件数通知
 }
 
 function IndeterminateCheckbox({
@@ -51,6 +52,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
   setDirtyCells,
   rowSelection,
   setRowSelection,
+  onSelectedRowCountChange,
 }: Props<TData>) {
   const table = useReactTable({
     data,
@@ -61,6 +63,10 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
     onRowSelectionChange: setRowSelection,
     enableRowSelection: true,
   })
+
+  useEffect(() => {
+    onSelectedRowCountChange?.(table.getSelectedRowModel().rows.length)
+  }, [table.getSelectedRowModel().rows.length, onSelectedRowCountChange])
 
   const rows = table.getRowModel().rows
   const parentRef = useRef<HTMLDivElement>(null)
