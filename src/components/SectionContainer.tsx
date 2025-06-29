@@ -1,22 +1,23 @@
 import { type ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { VirtualizedEditableTable } from './generic-table/VirtualizedEditableTable'
+import { Button } from './ui/button'
 
 // 汎用セクションコンテナ：編集・選択・パッケージ対応
 export function SectionContainer<T extends { id: string }>({
-  title,
-  data,
-  setData,
-  columns,
-  isEditing,
-  setIsEditing,
-  dirtyCells,
-  setDirtyCells,
-  rowSelection,
-  setRowSelection,
-  showCheckbox,
-  setShowCheckbox,
-  renderCell,
+  title,                        // セクションの見出しタイトル
+  data,                         // テーブルのデータ配列
+  setData,                      // データの更新関数（保存時などに使用）
+  columns,                      // 表示カラム定義（TanStack形式）
+  isEditing,                    // 編集モード状態（true: input表示）
+  setIsEditing,                 // 編集モードの更新関数
+  dirtyCells,                  // 編集中のセルの差分（idごとの変更Map）
+  setDirtyCells,               // 差分の更新関数
+  rowSelection,                // 選択状態（レコードID: true）
+  setRowSelection,             // 選択状態の更新関数
+  showCheckbox,                // チェックボックス列の表示有無
+  setShowCheckbox,             // チェック列表示切替関数
+  renderCell,                  // セルごとのスタイルクラス付与関数（任意）
 }: {
   title: string
   data: T[]
@@ -36,8 +37,11 @@ export function SectionContainer<T extends { id: string }>({
     value: unknown
   }) => string | undefined
 }) {
+  // ✔️ 現在チェックされている行数（VirtualizedEditableTableから通知）
   const [selectedCount, setSelectedCount] = useState(0)
+  // 📦 割当確定後のレコード一覧（チェック→割当ボタン押下で確定）
   const [committedItems, setCommittedItems] = useState<T[]>([])
+  // 🔍 現在フィルターで表示されている件数（VirtualizedEditableTableから通知）
   const [filteredCount, setFilteredCount] = useState(0)
 
   // 選択中のレコードのみ抽出
@@ -54,35 +58,38 @@ export function SectionContainer<T extends { id: string }>({
       {/* 操作バー＋件数表示 */}
       <div className="flex items-center gap-4 mb-2">
         {/* パッケージ生成モードのトグル */}
-        <button
-          onClick={() => setShowCheckbox((prev) => !prev)}
-          className="border px-4 py-1 rounded bg-purple-100"
-        >
-          {showCheckbox ? 'チェック非表示' : 'パッケージ生成'}
-        </button>
+        {!isEditing && (
+          <Button
+            onClick={() => setShowCheckbox((prev) => !prev)}
+            className="bg-orange-400"
+          >
+            {showCheckbox ? '終了' : 'パッケージ生成'}
+          </Button>
+        )}
 
         {/* 割当ボタン（有効時のみ） */}
         {showCheckbox && (
-          <button
+          <Button
             disabled={selectedCount === 0}
             onClick={handleAssign}
-            className="border px-4 py-1 rounded bg-blue-600 text-white text-sm disabled:opacity-40"
+            className="bg-blue-600 text-white text-sm disabled:opacity-40"
           >
             割当
-          </button>
+          </Button>
         )}
 
         {/* 編集モードトグル */}
-        <button
-          onClick={() => setIsEditing((prev) => !prev)}
-          className="border px-4 py-1 rounded"
-        >
-          {isEditing ? 'キャンセル' : '編集'}
-        </button>
+        {!showCheckbox && (
+          <Button
+            onClick={() => setIsEditing((prev) => !prev)}
+          >
+            {isEditing ? 'キャンセル' : '編集'}
+          </Button>
+        )}
 
         {/* 保存ボタン（編集時のみ表示） */}
         {isEditing && (
-          <button
+          <Button
             onClick={() => {
               setData((prev) =>
                 prev.map((row) =>
@@ -92,10 +99,10 @@ export function SectionContainer<T extends { id: string }>({
               setDirtyCells({})
               setIsEditing(false)
             }}
-            className="border px-4 py-1 rounded bg-blue-100"
+            className="bg-indigo-600"
           >
             保存
-          </button>
+          </Button>
         )}
 
         {/* ✅ 件数表示（フィルター後/全体） */}
