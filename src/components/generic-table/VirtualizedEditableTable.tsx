@@ -14,6 +14,7 @@ type Props<TData extends { id: string }> = {
   data: TData[]
   columns: ColumnDef<TData>[]
   isEditing: boolean
+  showCheckbox: boolean
   dirtyCells: Record<string, Partial<TData>>
   setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<TData>>>>
   rowSelection: Record<string, boolean>
@@ -45,6 +46,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
   data,
   columns,
   isEditing,
+  showCheckbox,
   dirtyCells,
   setDirtyCells,
   rowSelection,
@@ -82,7 +84,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
       <div ref={parentRef} className="h-[360px] overflow-y-auto overflow-x-auto">
         <table className="min-w-full table-fixed border-separate border-spacing-0">
           <colgroup>
-            {!isEditing && <col style={{ width: 36 }} />}
+            {showCheckbox && <col style={{ width: 36 }} />}
             {allColumns.map((col) => (
               <col key={col.id} style={{ width: col.getSize() }} />
             ))}
@@ -91,7 +93,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
           <thead className="sticky top-0 z-10 bg-white">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                {!isEditing && (
+                {showCheckbox && (
                   <th className="border-b px-2 py-1 bg-white w-[36px]">
                     <IndeterminateCheckbox
                       checked={table.getIsAllRowsSelected()}
@@ -121,9 +123,10 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
           <tbody>
             {paddingTop > 0 && (
               <tr style={{ height: `${paddingTop}px` }}>
-                <td colSpan={allColumns.length + (isEditing ? 0 : 1)} />
+                <td colSpan={allColumns.length + (showCheckbox ? 1 : 0)} />
               </tr>
             )}
+
             {virtualItems.map((vi) => {
               const row = rows[vi.index]
               return (
@@ -134,7 +137,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
                   } even:bg-gray-50`}
                   style={{ height: `${vi.size}px` }}
                 >
-                  {!isEditing && (
+                  {showCheckbox && (
                     <td className="border px-2 py-1 align-top w-[36px]">
                       <IndeterminateCheckbox
                         checked={row.getIsSelected()}
@@ -169,9 +172,10 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
                 </tr>
               )
             })}
+
             {paddingBottom > 0 && (
               <tr style={{ height: `${paddingBottom}px` }}>
-                <td colSpan={allColumns.length + (isEditing ? 0 : 1)} />
+                <td colSpan={allColumns.length + (showCheckbox ? 1 : 0)} />
               </tr>
             )}
           </tbody>

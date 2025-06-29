@@ -12,6 +12,9 @@ export default function App() {
   const [isEditingPeople, setIsEditingPeople] = useState(false)
   const [isEditingProducts, setIsEditingProducts] = useState(false)
 
+  const [showPeopleCheckbox, setShowPeopleCheckbox] = useState(false)
+  const [showProductsCheckbox, setShowProductsCheckbox] = useState(false)
+
   const [peopleDirty, setPeopleDirty] = useState<Record<string, Partial<Person>>>({})
   const [productDirty, setProductDirty] = useState<Record<string, Partial<Product>>>({})
 
@@ -68,9 +71,14 @@ export default function App() {
 
   return (
     <div className="p-6 space-y-8">
-      {/* ユーザー編集セクション */}
       <section>
         <div className="flex items-center gap-4 mb-2">
+          <button
+            onClick={() => setShowPeopleCheckbox((prev) => !prev)}
+            className="border px-4 py-1 rounded bg-purple-100"
+          >
+            {showPeopleCheckbox ? 'チェック非表示' : 'パッケージ生成'}
+          </button>
           <button
             onClick={() => setIsEditingPeople((prev) => !prev)}
             className="border px-4 py-1 rounded"
@@ -95,12 +103,18 @@ export default function App() {
           setDirtyCells={setPeopleDirty}
           rowSelection={peopleSelection}
           setRowSelection={setPeopleSelection}
+          showCheckbox={showPeopleCheckbox}
         />
       </section>
 
-      {/* 商品編集セクション */}
       <section>
         <div className="flex items-center gap-4 mb-2">
+          <button
+            onClick={() => setShowProductsCheckbox((prev) => !prev)}
+            className="border px-4 py-1 rounded bg-purple-100"
+          >
+            {showProductsCheckbox ? 'チェック非表示' : 'パッケージ生成'}
+          </button>
           <button
             onClick={() => setIsEditingProducts((prev) => !prev)}
             className="border px-4 py-1 rounded"
@@ -125,6 +139,7 @@ export default function App() {
           setDirtyCells={setProductDirty}
           rowSelection={productSelection}
           setRowSelection={setProductSelection}
+          showCheckbox={showProductsCheckbox}
         />
       </section>
     </div>
