@@ -2,7 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
 import { VirtualizedEditableTable } from './generic-table/VirtualizedEditableTable'
 
-// 編集・チェック・パッケージングなどの操作を含むテーブルセクションの汎用コンテナ
+// 汎用セクションコンテナ：編集・選択・パッケージ対応
 export function SectionContainer<T extends { id: string }>({
   title,
   data,
@@ -21,31 +21,29 @@ export function SectionContainer<T extends { id: string }>({
   title: string
   data: T[]
   setData: React.Dispatch<React.SetStateAction<T[]>>
-  columns: ColumnDef<T>[] // カラム定義（条件に応じて非表示列あり）
+  columns: ColumnDef<T>[]
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
-  dirtyCells: Record<string, Partial<T>> // 編集差分（idごとに上書き候補）
+  dirtyCells: Record<string, Partial<T>>
   setDirtyCells: React.Dispatch<React.SetStateAction<Record<string, Partial<T>>>>
-  rowSelection: Record<string, boolean> // 選択状態（id単位）
+  rowSelection: Record<string, boolean>
   setRowSelection: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
-  showCheckbox: boolean // パッケージ生成モード（チェック表示）
+  showCheckbox: boolean
   setShowCheckbox: React.Dispatch<React.SetStateAction<boolean>>
   renderCell?: (params: {
     row: T
     columnId: string
     value: unknown
-  }) => string | undefined // セル単位の動的クラス付け
+  }) => string | undefined
 }) {
-  // 現在選択されているレコード数を記録（ボタン活性制御に使用）
   const [selectedCount, setSelectedCount] = useState(0)
-
-  // パッケージ生成後に保持されるレコード群
   const [committedItems, setCommittedItems] = useState<T[]>([])
+  const [filteredCount, setFilteredCount] = useState(0)
 
-  // 現在選択状態のレコードを抽出
+  // 選択中のレコードのみ抽出
   const selectedItems = data.filter((d) => rowSelection[d.id])
 
-  // 「割当」ボタン押下時にパッケージに追加
+  // 「割当」ボタン押下時の処理
   const handleAssign = () => {
     setCommittedItems((prev) => [...prev, ...selectedItems])
     setRowSelection({})
@@ -53,7 +51,7 @@ export function SectionContainer<T extends { id: string }>({
 
   return (
     <>
-      {/* 操作ボタン群 */}
+      {/* 操作バー＋件数表示 */}
       <div className="flex items-center gap-4 mb-2">
         {/* パッケージ生成モードのトグル */}
         <button
@@ -63,7 +61,7 @@ export function SectionContainer<T extends { id: string }>({
           {showCheckbox ? 'チェック非表示' : 'パッケージ生成'}
         </button>
 
-        {/* 割当ボタン（選択があるときだけ有効） */}
+        {/* 割当ボタン（有効時のみ） */}
         {showCheckbox && (
           <button
             disabled={selectedCount === 0}
@@ -74,7 +72,7 @@ export function SectionContainer<T extends { id: string }>({
           </button>
         )}
 
-        {/* 編集モード切り替え */}
+        {/* 編集モードトグル */}
         <button
           onClick={() => setIsEditing((prev) => !prev)}
           className="border px-4 py-1 rounded"
@@ -82,11 +80,10 @@ export function SectionContainer<T extends { id: string }>({
           {isEditing ? 'キャンセル' : '編集'}
         </button>
 
-        {/* 編集モード時に表示される保存ボタン */}
+        {/* 保存ボタン（編集時のみ表示） */}
         {isEditing && (
           <button
             onClick={() => {
-              // dirtyCells に基づいてデータを更新し、編集状態をリセット
               setData((prev) =>
                 prev.map((row) =>
                   dirtyCells[row.id] ? { ...row, ...dirtyCells[row.id] } : row
@@ -100,13 +97,18 @@ export function SectionContainer<T extends { id: string }>({
             保存
           </button>
         )}
+
+        {/* ✅ 件数表示（フィルター後/全体） */}
+        <span className="ml-auto text-sm text-gray-600">
+          count: {filteredCount} / {data.length}
+        </span>
       </div>
 
       {/* セクションタイトル */}
       <h2 className="text-lg font-semibold mb-2">{title}</h2>
 
       <div className="flex items-start gap-6 w-full">
-        {/* テーブル本体（生成モード中は左右 50/50 に） */}
+        {/* テーブル表示 */}
         <div className={showCheckbox ? 'w-1/2' : 'w-full'}>
           <VirtualizedEditableTable
             data={data}
@@ -118,11 +120,12 @@ export function SectionContainer<T extends { id: string }>({
             setRowSelection={setRowSelection}
             showCheckbox={showCheckbox}
             onSelectedRowCountChange={setSelectedCount}
+            onFilteredCountChange={setFilteredCount} // ✅ フィルター件数を受け取る
             renderCell={renderCell}
           />
         </div>
 
-        {/* パッケージパネル（生成モード時のみ表示） */}
+        {/* パッケージサイドパネル */}
         {showCheckbox && (
           <div className="w-1/2 border rounded p-3 bg-gray-50 shadow-sm">
             <h3 className="text-sm font-semibold mb-2 text-gray-700">📦 パッケージ</h3>

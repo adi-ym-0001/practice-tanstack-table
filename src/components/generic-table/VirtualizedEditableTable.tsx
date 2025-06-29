@@ -1,3 +1,4 @@
+// ✅ React Table + 仮想スクロール構成
 import {
   flexRender,
   getCoreRowModel,
@@ -10,25 +11,33 @@ import React, { useEffect, useRef } from 'react'
 import { Filter } from './Filter'
 import { VirtualCell } from './VirtualCell'
 
+// 🧠 汎用テーブルの Props 型定義
 type Props<TData extends { id: string }> = {
   data: TData[]
   columns: ColumnDef<TData>[]
-  isEditing?: boolean
-  showCheckbox?: boolean
-  dirtyCells?: Record<string, Partial<Record<keyof TData, unknown>>>
+
+  isEditing?: boolean                     // 編集モードフラグ
+  showCheckbox?: boolean                 // チェックボックス列の表示制御
+  dirtyCells?: Record<string, Partial<Record<keyof TData, unknown>>> // 編集中の差分
   setDirtyCells?: React.Dispatch<React.SetStateAction<Record<string, Partial<TData>>>>
-  rowSelection?: Record<string, boolean>
+
+  rowSelection?: Record<string, boolean> // 選択状態（idごとの真偽）
   setRowSelection?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
-  onSelectedRowCountChange?: (count: number) => void
+
+  onSelectedRowCountChange?: (count: number) => void // 選択件数の通知
+  onFilteredCountChange?: (count: number) => void    // フィルター後件数の通知
+
   renderCell?: (params: {
     row: TData
     columnId: string
     value: unknown
-  }) => string | undefined
-  disableEditing?: boolean
-  disableSelection?: boolean
+  }) => string | undefined                           // セルごとのスタイル調整など
+
+  disableEditing?: boolean                           // 編集禁止モード（表示専用）
+  disableSelection?: boolean                         // 選択機能の無効化
 }
 
+// ✅ チェックボックス（indeterminate対応）
 function IndeterminateCheckbox({
   indeterminate,
   className = '',
@@ -50,7 +59,7 @@ function IndeterminateCheckbox({
   )
 }
 
-// 仮想スクロール対応かつ編集・選択・フィルター可能な汎用テーブル本体
+// 📊 仮想化＋編集／選択対応の汎用テーブル本体
 export function VirtualizedEditableTable<TData extends { id: string }>({
   data,
   columns,
@@ -61,27 +70,39 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
   rowSelection = {},
   setRowSelection,
   onSelectedRowCountChange,
+  onFilteredCountChange,
   renderCell,
   disableEditing = false,
   disableSelection = false,
 }: Props<TData>) {
+  // 🔧 React Table の初期化
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getCoreRowModel: getCoreRowModel(),            // 表示行
+    getFilteredRowModel: getFilteredRowModel(),    // フィルター適用後
     state: { rowSelection },
     onRowSelectionChange: setRowSelection,
-    enableRowSelection: !disableSelection,
+    enableRowSelection: !disableSelection,         // 選択可否切替
   })
 
+  // 🧠 選択件数とフィルター件数の通知（親コンポーネントへ）
   useEffect(() => {
     if (!disableSelection) {
       onSelectedRowCountChange?.(table.getSelectedRowModel().rows.length)
     }
-  }, [table.getSelectedRowModel().rows.length, onSelectedRowCountChange, disableSelection])
+    onFilteredCountChange?.(table.getFilteredRowModel().rows.length)
+  }, [
+    table.getSelectedRowModel().rows.length,
+    table.getFilteredRowModel().rows.length,
+    onSelectedRowCountChange,
+    onFilteredCountChange,
+    disableSelection,
+  ])
 
   const rows = table.getRowModel().rows
+
+  // 🎞️ スクロール領域の参照と仮想化セットアップ
   const parentRef = useRef<HTMLDivElement>(null)
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -90,18 +111,21 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
     overscan: 10,
   })
 
+  // 仮想表示の先頭／末尾 padding
   const virtualItems = virtualizer.getVirtualItems()
   const paddingTop = virtualItems[0]?.start ?? 0
   const paddingBottom =
     virtualizer.getTotalSize() -
     (virtualItems[virtualItems.length - 1]?.end ?? 0)
 
+  // 全列情報を抽出（カラム幅や render に使用）
   const allColumns = table.getAllLeafColumns()
 
   return (
     <div className="border rounded overflow-hidden text-sm text-gray-900">
       <div ref={parentRef} className="h-[360px] overflow-y-auto overflow-x-auto">
         <table className="w-full table-fixed border-separate border-spacing-0">
+          {/* 📐 列幅調整 */}
           <colgroup>
             {!disableSelection && showCheckbox && <col style={{ width: 36 }} />}
             {allColumns.map((col) => (
@@ -109,6 +133,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
             ))}
           </colgroup>
 
+          {/* 🔠 ヘッダー */}
           <thead className="sticky top-0 z-10 bg-white">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
@@ -139,6 +164,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
             ))}
           </thead>
 
+          {/* 📄 行本体 */}
           <tbody>
             {paddingTop > 0 && (
               <tr style={{ height: `${paddingTop}px` }}>
@@ -156,6 +182,7 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
                   } ${vi.index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                   style={{ height: `${vi.size}px` }}
                 >
+                  {/* ✅ チェック列 */}
                   {!disableSelection && showCheckbox && (
                     <td className="border px-2 py-1 align-top w-[36px]">
                       <IndeterminateCheckbox
@@ -165,6 +192,8 @@ export function VirtualizedEditableTable<TData extends { id: string }>({
                       />
                     </td>
                   )}
+
+                  {/* 各セルの描画 */}
                   {row.getVisibleCells().map((cell) => {
                     const rowId = row.original.id
                     const colId = cell.column.id
