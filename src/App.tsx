@@ -116,7 +116,14 @@ function SectionContainer<T extends { id: string }>({
   setShowCheckbox: React.Dispatch<React.SetStateAction<boolean>>
 }) {
   const [selectedCount, setSelectedCount] = useState(0)
+  const [committedItems, setCommittedItems] = useState<T[]>([])
+
   const selectedItems = data.filter((d) => rowSelection[d.id])
+
+  const handleAssign = () => {
+    setCommittedItems((prev) => [...prev, ...selectedItems])
+    setRowSelection({})
+  }
 
   return (
     <>
@@ -131,7 +138,7 @@ function SectionContainer<T extends { id: string }>({
         {showCheckbox && (
           <button
             disabled={selectedCount === 0}
-            onClick={() => console.log('割当', selectedItems)}
+            onClick={handleAssign}
             className="border px-4 py-1 rounded bg-blue-600 text-white text-sm disabled:opacity-40"
           >
             割当
@@ -182,11 +189,11 @@ function SectionContainer<T extends { id: string }>({
         {showCheckbox && (
           <div className="w-[300px] border rounded p-3 bg-gray-50 shadow-sm">
             <h3 className="text-sm font-semibold mb-2 text-gray-700">📦 パッケージ</h3>
-            {selectedItems.length === 0 ? (
-              <p className="text-gray-500 text-sm">選択中のレコードがありません</p>
+            {committedItems.length === 0 ? (
+              <p className="text-gray-500 text-sm">まだ割当されたレコードはありません</p>
             ) : (
               <ul className="text-sm space-y-1 list-disc list-inside text-gray-800">
-                {selectedItems.map((item) => (
+                {committedItems.map((item) => (
                   <li key={item.id}>{JSON.stringify(item)}</li>
                 ))}
               </ul>
