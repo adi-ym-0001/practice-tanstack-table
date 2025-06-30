@@ -5,8 +5,8 @@ import type { Person } from '../../data/types'
 export const getPersonColumns = (showCheckbox: boolean): ColumnDef<Person>[] => {
   // ベースとなるカラム定義（すべての列を表示）
   const base: ColumnDef<Person>[] = [
-    { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'firstName', header: 'First Name' },
+    { accessorKey: 'id', header: 'ID', size: 50, },
+    { accessorKey: 'firstName', header: 'First Name', size:120 },
     { accessorKey: 'lastName', header: 'Last Name' },
     { accessorKey: 'age', header: 'Age' },
     { accessorKey: 'visits', header: 'Visits' },
